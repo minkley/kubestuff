@@ -8,9 +8,15 @@ This files and code in this repository have only been tested on a linux ubuntu &
 You need to install the following software on your host.   Apologies to Windows users, I don't
 have access to windows.
 
-   git 
-   vagrant
+
+   git:  
+          https://git-scm.com/downloads
+   
+   vagrant:  
+         https://www.vagrantup.com/docs/installation
+   
    Oracle virtualbox  
+         https://www.virtualbox.org
     
 If you have never used these before, after you have completed your install, check that you can 
 access the commands from the command line
@@ -27,33 +33,51 @@ access the commands from the command line
     os to test 
 
 
-1. Clone the repo
-   git clone https://github.com/minkley/kubestuff.git
+## Clone the repo
+   `git clone https://github.com/minkley/kubestuff.git`
+
+## Validate the Vagrantfile
+`cd kubestuff # change to the kubestuff directory`
+
+`vagrant validate # Validate the downloaded Vagrantfile`
+*Vagrant file validated successfully.*
 
 
-2. Go to the kubestuff directory
-   cd kubestuff
-
-3. Validate the Vagrantfile
-   vagrant validate
-   Vagrantfile validated successfully.
-
-4. Build the cluster
-   The vm names are control, worker01, worker02 & worker03.  You can build all at once or
-   one at a time.  Vagrant will down load the vm images required for install.  I have chosen
-   centos vms' and so the kubernetes setup are for Centos
+## Build the kubernetes VM's
 
 
-   #Build everything 
-   vagrant up
+   The vm names configured in the Vagrantfile are:
+   - control
+   - worker01
+   - worker02
+   - worker03.  
+  
+  
+  You can build all at once or one at a time.  The vm's are built using Centos and the first time you run vagrant, it will fetch the Centos image if it is not there.
+  
+  Build command is 
 
-   #Build by name 
-   vagrant up control
-   or
-   vagrant up control worker01
-   ..
+  `vagrant up <host, host> [default build everything.]`
+   
+   Build for the purpos of this excercise build control & worker01
+   
+   `vagrant up control worker01`
 
-5. When the cluster is built log into each using vagrant
+   Note - each vm will be automatically rebooted when vagrant is complete.  It takes about 5 minutes to build
+   both on my machine.
+
+## Logging on to control
+
+   Each vm is created with user/password vagrant. 
+   PLEASE DO NOT USE IN PRODUCTION.
+
+   `vagrant ssh control`
+
+   You can also run `ssh vagrant@controlIP `
+
+   
+
+1. When the cluster is built log into each using vagrant
    
    vagrant ssh control
    or 
