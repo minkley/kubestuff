@@ -165,7 +165,7 @@ logout
 Connection to worker01 closed.
 ```
 
-## Check all is up.
+## Verification Checks 
 
 After you have joined all the workers, you can run a few commands to check the status of the cluster.
 
@@ -205,3 +205,10 @@ kube-system   weave-net-j49t2                   2/2     Running   1          4m4
 
 
 ```
+
+
+## Todo
+
+- Everything could be packed into the single Vagrantfile
+- Test on Windows
+- Build Ubuntu vm's and other flavors
