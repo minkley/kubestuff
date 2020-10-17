@@ -1,31 +1,44 @@
-# kubestuff
+# Quick start to building a Kubernetes cluster using Vagrant
 
-Using the Vagrantfile to build kubernetes cluster with 1xcontrol and 3 workers
+If you are looking to learn kubernetes and possibly do the Certified Kubernetes Admin exam,
+you might find this helpful.  It's stil very much a work in progress.
 
-The Vagrantfile has been tested with Virtualbox on Mac OS and Linux Ubuntu hosts.
+## Pre-Requisites
+This files and code in this repository have only been tested on a linux ubuntu & Mac OS host.
+You need to install the following software on your host.   Apologies to Windows users, I don't
+have access to windows.
 
-1.  Install git, vagrant and virtualbox on your host. 
-    Run 
+   git 
+   vagrant
+   Oracle virtualbox  
+    
+If you have never used these before, after you have completed your install, check that you can 
+access the commands from the command line
+
+```
     git --version
+
     vboxmanage --version
+
     vagrant version 
+```
     
     Apologies to Windows users, I'm not sure how the command line works, dont have windows
     os to test 
 
 
-2. Clone the repo
+1. Clone the repo
    git clone https://github.com/minkley/kubestuff.git
 
 
-3. Go to the kubestuff directory
+2. Go to the kubestuff directory
    cd kubestuff
 
-4. Validate the Vagrantfile
+3. Validate the Vagrantfile
    vagrant validate
    Vagrantfile validated successfully.
 
-5. Build the cluster
+4. Build the cluster
    The vm names are control, worker01, worker02 & worker03.  You can build all at once or
    one at a time.  Vagrant will down load the vm images required for install.  I have chosen
    centos vms' and so the kubernetes setup are for Centos
@@ -40,7 +53,7 @@ The Vagrantfile has been tested with Virtualbox on Mac OS and Linux Ubuntu hosts
    vagrant up control worker01
    ..
 
-6. When the cluster is built log into each using vagrant
+5. When the cluster is built log into each using vagrant
    
    vagrant ssh control
    or 
