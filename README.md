@@ -161,9 +161,21 @@ Run 'kubectl get nodes' on the control-plane to see this node join the cluster.
 
 [vagrant@worker01 ~]$ exit
 logout
-```
 
 Connection to worker01 closed.
+```
+
+## Check all is up.
+
+After you have joined all the workers, you can run a few commands to check the status of the cluster.
+
+- `kubectl get nodes`
+- `kubectl cluster-info`
+- `kubectl get pods --all-namespaces`
+
+
+### Sample output
+```
 [vagrant@control ~]$ kubectl get nodes
 NAME       STATUS   ROLES    AGE     VERSION
 control    Ready    master   4m30s   v1.19.3
@@ -192,3 +204,4 @@ kube-system   weave-net-4xr72                   2/2     Running   0          5m5
 kube-system   weave-net-j49t2                   2/2     Running   1          4m49s
 
 
+```
