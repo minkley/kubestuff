@@ -51,7 +51,7 @@ access the commands from the command line
    - control
    - worker01
    - worker02
-   - worker03.  
+   - worker03  
   
   
   You can build all at once or one at a time.  The vm's are built using Centos and the first time you run vagrant, it will fetch the Centos image if it is not there.
@@ -127,7 +127,7 @@ rolebinding.rbac.authorization.k8s.io/weave-net created
 daemonset.apps/weave-net created
 ```
 
-## Joining the worker to the kluster
+## Joining the worker to the cluster
 
 Look in the kubeadm-init.out file and paste the kubeadm join command.  This command needs to be run on each worker to join the cluster.  The join command contains the token needed to become member of the cluster
 
@@ -140,23 +140,9 @@ Log on to worker01 from the control host
 `sudo kubeadm join 10.1.1.10:6443 --token 1dlpip.et4954ln8b7t7hsb \
     --discovery-token-ca-cert-hash sha256:f9a67e036e62d43d8b7ae35126f9938419c8d88a59ae79c80ad0449c0503a7fc`
 
-[vagrant@control ~]$   mkdir -p $HOME/.kube
-[vagrant@control ~]$   sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-[vagrant@control ~]$   sudo chown $(id -u):$(id -g) $HOME/.kube/config
-[vagrant@control ~]$ kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
-serviceaccount/weave-net created
-clusterrole.rbac.authorization.k8s.io/weave-net created
-clusterrolebinding.rbac.authorization.k8s.io/weave-net created
-role.rbac.authorization.k8s.io/weave-net created
-rolebinding.rbac.authorization.k8s.io/weave-net created
-daemonset.apps/weave-net created
+### Sample output
+```
 [vagrant@control ~]$ ssh vagrant@worker01
-The authenticity of host 'worker01 (10.1.1.11)' can't be established.
-ECDSA key fingerprint is SHA256:kOTPApXlRCw/n2JuZ4smDWVR2Q+9E4s9n9Uw130FcBY.
-ECDSA key fingerprint is MD5:2e:4d:85:6a:09:2b:4d:de:59:63:ba:88:b6:08:4a:a6.
-Are you sure you want to continue connecting (yes/no)? yes
-Warning: Permanently added 'worker01,10.1.1.11' (ECDSA) to the list of known hosts.
-vagrant@worker01's password:
 [vagrant@worker01 ~]$ sudo kubeadm join 10.1.1.10:6443 --token 1dlpip.et4954ln8b7t7hsb \
 >     --discovery-token-ca-cert-hash sha256:f9a67e036e62d43d8b7ae35126f9938419c8d88a59ae79c80ad0449c0503a7fc
 [preflight] Running pre-flight checks
@@ -175,6 +161,8 @@ Run 'kubectl get nodes' on the control-plane to see this node join the cluster.
 
 [vagrant@worker01 ~]$ exit
 logout
+```
+
 Connection to worker01 closed.
 [vagrant@control ~]$ kubectl get nodes
 NAME       STATUS   ROLES    AGE     VERSION
