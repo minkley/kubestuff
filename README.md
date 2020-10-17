@@ -40,6 +40,7 @@ access the commands from the command line
 `cd kubestuff # change to the kubestuff directory`
 
 `vagrant validate # Validate the downloaded Vagrantfile`
+
 *Vagrant file validated successfully.*
 
 
@@ -66,7 +67,7 @@ access the commands from the command line
    Note - each vm will be automatically rebooted when vagrant is complete.  It takes about 5 minutes to build
    both on my machine.
 
-## Logging on to control
+## Logging on to control host 
 
    Each vm is created with user/password vagrant. 
    PLEASE DO NOT USE IN PRODUCTION.
@@ -77,57 +78,68 @@ access the commands from the command line
 
    
 
-1. When the cluster is built log into each using vagrant
-   
-   vagrant ssh control
-   or 
-   vagrant ssh worker01
+## Complete the install on Control
 
-   password is vagrant btw
+Vagrantfile has installed Kubernetes and Container (docker) software and set IP address etc.  The following steps are outlined here.
 
+- Intialise kubernetes with the `kubeadm init ` command.
+- Create kuberenetes admin config directories in vagrant user home directory
+- Install weave CNI (Container Network Interface) driver.
+- Using the kubeadm init output, capture the `kubeadm join` output and run on workers
 
-7  To setup your cluster you need to complete the following activities.
+NOTE: kubeadmin init will save output in kubeadm-init.out file.  You can copy the join command and token 
 
-   initialiase kubernetes with kubeadm init command. Create the admin config directories and
-   install network driver.  After this you can log in to each worker and join the cluster
-   NOTE: kubeadm init command will print out join command with a token.  Suggest you copy this into
-   a file 
-
+```
    vagrant ssh control
    
-   kubeadm init --pod-network-cidr 172.16.0.0/16 --apiserver-advertise-address 10.1.1.10 | tee /vagrant/kubeadm-init.out
+   sudo kubeadm init --pod-network-cidr 172.16.0.0/16 --apiserver-advertise-address 10.1.1.10 | tee /vagrant/kubeadm-init.out
+```
+
+### Create the kube admin config directories
 
 To start using your cluster, you need to run the following as a regular user:
 
+~~~
   mkdir -p $HOME/.kube
   sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
   sudo chown $(id -u):$(id -g) $HOME/.kube/config
+~~~
+
+### Install CNI driver
 
 Next install a Network driver. I have selected Weave
-kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+
+`kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"`
+
+
+### Sample output
+
+```
+[vagrant@control ~]$   mkdir -p $HOME/.kube
+[vagrant@control ~]$   sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+[vagrant@control ~]$   sudo chown $(id -u):$(id -g) $HOME/.kube/config
+[vagrant@control ~]$ kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+serviceaccount/weave-net created
+clusterrole.rbac.authorization.k8s.io/weave-net created
+clusterrolebinding.rbac.authorization.k8s.io/weave-net created
+role.rbac.authorization.k8s.io/weave-net created
+rolebinding.rbac.authorization.k8s.io/weave-net created
+daemonset.apps/weave-net created
+```
+
+## Joining the worker to the kluster
+
+Look in the kubeadm-init.out file and paste the kubeadm join command.  This command needs to be run on each worker to join the cluster.  The join command contains the token needed to become member of the cluster
 
 Then you can join any number of worker nodes by running the following on each as root:
 
-kubeadm join 192.168.1.221:6443 --token 4zhlk8.uq688xuump0t3u44 \
-    --discovery-token-ca-cert-hash sha256:9e27b013402de2b5d08fc8fc6a251f9518034389648a76cb6cca5e26f5c988d2 
+Log on to worker01 from the control host
 
+`ssh vagrant@worker01`
 
-Output of the above commands
+`sudo kubeadm join 10.1.1.10:6443 --token 1dlpip.et4954ln8b7t7hsb \
+    --discovery-token-ca-cert-hash sha256:f9a67e036e62d43d8b7ae35126f9938419c8d88a59ae79c80ad0449c0503a7fc`
 
-To start using your cluster, you need to run the following as a regular user:
-
-  mkdir -p $HOME/.kube
-  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-  sudo chown $(id -u):$(id -g) $HOME/.kube/config
-
-You should now deploy a pod network to the cluster.
-Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
-  https://kubernetes.io/docs/concepts/cluster-administration/addons/
-
-Then you can join any number of worker nodes by running the following on each as root:
-
-kubeadm join 10.1.1.10:6443 --token 1dlpip.et4954ln8b7t7hsb \
-    --discovery-token-ca-cert-hash sha256:f9a67e036e62d43d8b7ae35126f9938419c8d88a59ae79c80ad0449c0503a7fc
 [vagrant@control ~]$   mkdir -p $HOME/.kube
 [vagrant@control ~]$   sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 [vagrant@control ~]$   sudo chown $(id -u):$(id -g) $HOME/.kube/config
