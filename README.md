@@ -206,6 +206,29 @@ kube-system   weave-net-j49t2                   2/2     Running   1          4m4
 
 ```
 
+## Test your cluster.
+
+There are some great application examples available on the kubernetes.io which you can
+follow to test and kick the tyres on your cluster.
+
+https://kubernetes.io/docs/tutorials/stateless-application/guestbook/
+
+```
+kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+
+kubectl apply -f https://k8s.io/examples/application/guestbook/redis-master-deployment.yaml
+
+kubectl apply -f https://k8s.io/examples/application/guestbook/redis-master-service.yaml
+
+kubectl apply -f https://k8s.io/examples/application/guestbook/redis-slave-deployment.yaml
+
+kubectl apply -f https://k8s.io/examples/application/guestbook/redis-slave-service.yaml
+
+kubectl apply -f https://k8s.io/examples/application/guestbook/frontend-deployment.yaml
+
+kubectl apply -f https://k8s.io/examples/application/guestbook/frontend-service.yaml
+
+```
 
 ## Todo
 
