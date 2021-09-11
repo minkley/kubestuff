@@ -164,7 +164,21 @@ kube-system   weave-net-mbdlk                   2/2     Running   0             
 ```
 kubectl run nginx --image=nginx
 kubectl run nginx1 --image=nginx
-kubectl get pods 
+```
+```
+vagrant@kmaster:~$ kubectl get pods -o wide
+NAME     READY   STATUS    RESTARTS   AGE   IP          NODE      NOMINATED NODE   READINESS GATES
+nginx    1/1     Running   0          30s   10.32.0.2   knode01   <none>           <none>
+nginx1   1/1     Running   0          25s   10.32.0.2   knode02   <none>           <none>
+
+```
+
+Delete the pods
+```angular2html
+vagrant@kmaster:~$ kubectl delete pods nginx nginx1
+pod "nginx" deleted
+pod "nginx1" deleted
+
 ```
 ## Tips
 
