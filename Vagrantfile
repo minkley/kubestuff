@@ -32,11 +32,7 @@ Vagrant.configure("2") do |config|
   # `vagrant box outdated`. This is not recommended.
   config.vm.box_check_update = false
 
-  # Create a public network, which generally matched to bridged network.
-  # Bridged networks make the machine appear as another physical device on
-  # your network.
-  config.vm.network "public_network",bridge: "enp66s0"
-
+  cd /va
   # Share an additional folder to the guest VM. The first argument is
   # the path on the host to the actual folder. The second argument is
   # the path on the guest to mount the folder. And the optional third
