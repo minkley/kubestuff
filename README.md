@@ -10,6 +10,7 @@ Vagrant script will do the following.
 - Install all kubernetes and docker software
 - Configure & Build kubernetes Control Plane
 - Configure nodes and join cluster
+- Install Weave CNI 
 
 If you are going to work with Kubernetes, you must familiarise yourself with 
 the kubernetes documentation - which is excellent.
@@ -108,7 +109,13 @@ Build the nodes after you have successfully built kmaster
 
    You can also run `ssh vagrant@kmasterIP `
 
- 
+## Install Weave CNI
+
+The script, install-CNI-Weave.sh is run during the build on kmaster.
+```angular2html
+export KUBECONFIG=/etc/kubernetes/admin.conf
+kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+```
 
 ## Verification Checks 
 
