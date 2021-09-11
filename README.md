@@ -63,7 +63,19 @@ access the commands from the command line
 
 *Vagrant file validated successfully.*
 
+#NOTE. Bridged adapter selection.
 
+When you first run `vagrant up kmaster` it is most likely that you will be prompted 
+to manually select the bridged adapter.   Make a note of the adapter name in the 
+prompt and  replace "enp66s0" with the correct adapter for your system, in the following line of the Vagrantfile
+
+```angular2html
+# Create a public network, which generally matched to bridged network.
+  # Bridged networks make the machine appear as another physical device on
+  # your network.
+  config.vm.network "public_network",bridge: "enp66s0"
+                                              ^^^^^^^
+```
 ## Build the kubernetes VM's
 
 
@@ -74,15 +86,16 @@ access the commands from the command line
 
   
   
-  You can build all at once or one at a time.  The vm's are built using Centos and the first time you run vagrant, it will fetch the Centos image if it is not there.
-  
-  Build command is 
+Build the kmaster first before the nodes.  The kmaster build writes the output
+of the kubeadm init command which is needed for the nodes to join the cluster
 
-  `vagrant up <host, host> [default build everything.]`
+  Build kmaster first
+
+  `vagrant up kmaster`
    
-   For the purpose of this excercise, we will build  kmaster & knode01
-   
-   `vagrant up kmaster knode01`
+Build the nodes after you have successfully built kmaster   
+
+   `vagrant up  knode01 knode02`
 
 
 
@@ -107,34 +120,42 @@ After you have joined all the knodes, you can run a few commands to check the st
 
 
 ### Sample output
+
+List all the nodes.
+
 ```
-[vagrant@kmaster ~]$ kubectl get nodes
-NAME       STATUS   ROLES    AGE     VERSION
-kmaster    Ready    master   4m30s   v1.19.3
-knode01   Ready    <none>   81s     v1.19.3
+vagrant@kmaster:~$ kubectl get nodes
+NAME      STATUS   ROLES                  AGE     VERSION
+kmaster   Ready    control-plane,master   7m16s   v1.22.1
+knode01   Ready    <none>                 3m55s   v1.22.1
+knode02   Ready    <none>                 59s     v1.22.1
+```
+Show the clusterinfo
 
-
-vagrant@kmaster ~]$ kubectl cluster-info
-Kubernetes master is running at https://10.1.1.10:6443
-KubeDNS is running at https://10.1.1.10:6443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+```
+vagrant@kmaster:~$ kubectl cluster-info
+Kubernetes control plane is running at https://192.168.56.2:6443
+CoreDNS is running at https://192.168.56.2:6443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
 
 To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+```
+List pods in all namespaces
 
-
-
-[vagrant@kmaster ~]$ kubectl get pods --all-namespaces
-NAMESPACE     NAME                              READY   STATUS    RESTARTS   AGE
-kube-system   coredns-f9fd979d6-2cxt4           1/1     Running   0          7m39s
-kube-system   coredns-f9fd979d6-xxcr5           1/1     Running   0          7m39s
-kube-system   etcd-kmaster                      1/1     Running   0          7m49s
-kube-system   kube-apiserver-kmaster            1/1     Running   0          7m49s
-kube-system   kube-kmasterler-manager-kmaster   1/1     Running   0          7m48s
-kube-system   kube-proxy-4bd4m                  1/1     Running   0          7m39s
-kube-system   kube-proxy-vvftg                  1/1     Running   0          4m49s
-kube-system   kube-scheduler-kmaster            1/1     Running   0          7m49s
-kube-system   weave-net-4xr72                   2/2     Running   0          5m54s
-kube-system   weave-net-j49t2                   2/2     Running   1          4m49s
-
+```
+vagrant@kmaster:~$ kubectl get pods -A
+NAMESPACE     NAME                              READY   STATUS    RESTARTS        AGE
+kube-system   coredns-78fcd69978-pdrbx          1/1     Running   0               8m50s
+kube-system   coredns-78fcd69978-qq9mb          1/1     Running   0               8m50s
+kube-system   etcd-kmaster                      1/1     Running   0               9m4s
+kube-system   kube-apiserver-kmaster            1/1     Running   0               9m2s
+kube-system   kube-controller-manager-kmaster   1/1     Running   0               9m4s
+kube-system   kube-proxy-fpwjh                  1/1     Running   0               2m49s
+kube-system   kube-proxy-p72q2                  1/1     Running   0               8m51s
+kube-system   kube-proxy-txfgk                  1/1     Running   0               5m45s
+kube-system   kube-scheduler-kmaster            1/1     Running   0               9m2s
+kube-system   weave-net-4pxpg                   2/2     Running   1 (8m35s ago)   8m51s
+kube-system   weave-net-h5l2v                   2/2     Running   0               5m45s
+kube-system   weave-net-mbdlk                   2/2     Running   0               2m49s
 
 ```
 
@@ -145,3 +166,8 @@ kubectl run nginx --image=nginx
 kubectl run nginx1 --image=nginx
 kubectl get pods 
 ```
+## Tips
+
+- Run the following command on your master create command completion for kubectl
+  - `kubectl completion bash >/etc/bash_completeion.d/kubectl`
+
