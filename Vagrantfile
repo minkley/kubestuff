@@ -1,197 +1,122 @@
 # -*- mode: ruby -*-
-# vi: set ft=ruby :
+# vi:set ft=ruby sw=2 ts=2 sts=2:
 
+# Define the number of master and worker nodes
+# If this number is changed, remember to update setup-hosts.sh script with the new hosts IP details in /etc/hosts of each VM.
+NUM_MASTER_NODE = 1
+NUM_WORKER_NODE = 2
 
-ENV['VAGRANT_DEFAULT_PROVIDER'] = 'virtualbox'
-### Centos is always a little finnicky
-### This file is to setup 3 centos vms to go through 
-### the Certified Kubernetes Admin training.
-### I prefer ubuntu, but seems Centos 7 is the one being used in the training
-### Notes:
-### To install guest aditions run
-### vagrant plugin install vagrant-vbguest
-### Turn off all the firewall and disable SELinux
-### sudo systemctl disable --now firewalld
-### vi /etc/selinux/config ===> change SELINUX=disabled
+IP_NW = "192.168.56."
+MASTER_IP_START = 1
+NODE_IP_START = 2
 
-$cka_docker = <<-'CKA'
-  # script that runs 
-  # https://kubernetes.io/docs/setup/production-environment/container-runtimes/
-  
-  sudo yum install -y vim yum-utils device-mapper-persistent-data lvm2
-  sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-
-  # notice that only verified versions of Docker may be installed
-  # verify the documentation to check if a more recent version is available
-
-  sudo yum install -y docker-ce
-  [ ! -d /etc/docker ] && sudo mkdir /etc/docker
-
-  sudo cat > /etc/docker/daemon.json <<EOF
-  {
-    "exec-opts": ["native.cgroupdriver=systemd"],
-    "log-driver": "json-file",
-    "log-opts": {
-      "max-size": "100m"
-    },
-    "storage-driver": "overlay2",
-    "storage-opts": [
-      "overlay2.override_kernel_check=true"
-    ]
-  }
-EOF
-
-  sudo mkdir -p /etc/systemd/system/docker.service.d
-
-  sudo systemctl daemon-reload
-  sudo systemctl restart docker
-  sudo systemctl enable docker
-
-CKA
-
-$cka_kubetools = <<-'K8S'
-# kubeadm installation instructions as on
-# https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
-
-sudo cat <<EOF > /etc/yum.repos.d/kubernetes.repo
-[kubernetes]
-name=Kubernetes
-baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
-enabled=1
-gpgcheck=1
-repo_gpgcheck=1
-gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
-EOF
-
-# Set SELinux in permissive mode (effectively disabling it)
-#setenforce 0
-#sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
-
-# disable swap (assuming that the name is /dev/centos/swap
-#sed -i 's/^\/dev\/mapper\/centos-swap/#\/dev\/mapper\/centos-swap/' /etc/fstab
-#swapoff /dev/mapper/centos-swap
-
-sudo yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
-sudo systemctl enable --now kubelet
-
-# Set iptables bridging
-sudo cat <<EOF >  /etc/sysctl.d/k8s.conf
-net.bridge.bridge-nf-call-ip6tables = 1
-net.bridge.bridge-nf-call-iptables = 1
-EOF
-sudo sysctl --system
-#sudo echo "GATEWAY=192.168.1.1" >>/etc/sysconfig/network-scripts/ifcfg-eth1
-K8S
-
-
-$script = <<-'SCRIPT'
-echo "running my commands" 
-      sudo yum install -y net-tools
-      sudo systemctl disable --now firewalld
-      sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config;
-      sudo sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
-      # Disable swap for kubernetes
-      sudo sed -i '/swap/ s/^/#/' /etc/fstab 
-      sudo yum install -y git bash-completion vim 
-      sudo printf "10.1.1.10   control\n10.1.1.11   worker01\n10.1.1.12   worker02\n10.1.1.13   worker03\n" >> /etc/hosts
-      #sudo echo "1" > /proc/sys/net/ipv4/ip_forward
-      #sudo shutdown -r +1
-SCRIPT
- 
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
 Vagrant.configure("2") do |config|
-  ##### DEFINE Control #####
-  config.vm.define "control" do |config|
-    config.vm.provider "virtualbox" do |v|
-      v.memory = 4096
-      v.cpus = 2
-    end
-    config.vm.hostname = "control"
-    config.vm.box = "centos/7"
-    config.vm.box_version = "2004.01"
-    config.vm.box_check_update = false
-    #config.vm.network "public_network", bridge: 'wlp112s0',ip: "192.168.1.221"
-    config.vm.network :private_network, ip: "10.1.1.10"
-    ####
-    #config.vm.provision "shell",
-    #run: "always",
-    #inline: "/sbin/route add default gw 192.168.1.1"
+  # The most common configuration options are documented and commented below.
+  # For a complete reference, please see the online documentation at
+  # https://docs.vagrantup.com.
 
-    # delete default gw on eth0
-    #config.vm.provision "shell",
-    #run: "always",
-    #inline: "eval `/sbin/route -n | awk '{ if ($8 ==\"eth0\" && $2 != \"0.0.0.0\") print \"route del default gw \" $2; }'`"
-    ####
+  # Every Vagrant development environment requires a box. You can search for
+  # boxes at https://vagrantcloud.com/search.
+  # config.vm.box = "base"
+  # ubuntu 18.04
+  config.vm.box = "ubuntu/bionic64"
+  #ubuntu 20.04
+  # config.vm.box = ubuntu/focal64
 
-    #config.ssh.forward_agent = true
-    config.vm.provision "shell", inline: $script  
-    config.vm.provision "shell", inline: $cka_docker
-    config.vm.provision "shell", inline: $cka_kubetools
-    config.vm.provision "shell", inline: "sudo shutdown -r +1"
+  # Disable automatic box update checking. If you disable this, then
+  # boxes will only be checked for updates when the user runs
+  # `vagrant box outdated`. This is not recommended.
+  config.vm.box_check_update = false
 
+  # Create a public network, which generally matched to bridged network.
+  # Bridged networks make the machine appear as another physical device on
+  # your network.
+  config.vm.network "public_network",bridge: "enp66s0"
+
+  # Share an additional folder to the guest VM. The first argument is
+  # the path on the host to the actual folder. The second argument is
+  # the path on the guest to mount the folder. And the optional third
+  # argument is a set of non-required options.
+  # config.vm.synced_folder "../data", "/vagrant_data"
+  # config.vm.synced_folder "/d/mdata2" , "/d/mdata2"
+  # Provider-specific configuration so you can fine-tune various
+  # backing providers for Vagrant. These expose provider-specific options.
+  # Example for VirtualBox:
+  #
+  # config.vm.provider "virtualbox" do |vb|
+  #   # Customize the amount of memory on the VM:
+  #   vb.memory = "1024"
+  # end
+  #
+  # View the documentation for the provider you are using for more
+  # information on available options.
+
+  # Provision Master Nodes
+  (1..NUM_MASTER_NODE).each do |i|
+      config.vm.define "kmaster" do |node|
+        # Name shown in the GUI
+        node.vm.provider "virtualbox" do |vb|
+            vb.name = "kmaster"
+            vb.memory = 4096
+            vb.cpus = 2
+        end
+        node.vm.hostname = "kmaster"
+        node.vm.network :private_network, ip: IP_NW + "#{MASTER_IP_START + i}"
+        node.vm.network "forwarded_port", guest: 22, host: "#{2710 + i}"
+
+        node.vm.provision "setup-hosts", :type => "shell", :path => "ubuntu/vagrant/setup-hosts.sh" do |s|
+          s.args = ["enp0s8"]
+        end
+
+
+        node.vm.provision "setup-dns", type: "shell", :path => "ubuntu/vagrant/update-dns.sh"
+        # Setup br-netfilter before docker adn kubernetes
+        node.vm.provision "install-br-netfilter", type: "shell", :path => "ubuntu/vagrant/install-br_netfilter.sh"
+
+        node.vm.provision "install-docker", type: "shell", :path => "ubuntu/vagrant/install-docker.sh"
+        node.vm.provision "install-kubernetes", type: "shell", :path => "ubuntu/vagrant/install-kubernetes.sh"
+
+        node.vm.provision "kubeadm-init",type: "shell", :path => "ubuntu/vagrant/kubeadm-init.sh"
+
+        node.vm.provision "pod-network-init",type: "shell", :path => "ubuntu/vagrant/install-CNI-Weave.sh"
+
+
+
+
+      end
   end
 
 
 
-  ##### DEFINE worker01 #####
-  config.vm.define "worker01" do |config|
-    config.vm.provider "virtualbox" do |v|
-        v.memory = 2048
-        v.cpus = 1
+  # Provision Worker Nodes
+  (1..NUM_WORKER_NODE).each do |i|
+    config.vm.define "knode0#{i}" do |node|
+        node.vm.provider "virtualbox" do |vb|
+            vb.name = "knode0#{i}"
+            vb.memory = 4096
+            vb.cpus = 2
+        end
+        node.vm.hostname = "knode0#{i}"
+        node.vm.network :private_network, ip: IP_NW + "#{NODE_IP_START + i}"
+                node.vm.network "forwarded_port", guest: 22, host: "#{2720 + i}"
+
+        node.vm.provision "setup-hosts", :type => "shell", :path => "ubuntu/vagrant/setup-hosts.sh" do |s|
+          s.args = ["enp0s8"]
+        end
+
+        node.vm.provision "setup-dns", type: "shell", :path => "ubuntu/vagrant/update-dns.sh"
+# Setup br-netfilter first before docker & kubernetes
+        node.vm.provision "install-br-netfilter", type: "shell", :path => "ubuntu/vagrant/install-br_netfilter.sh"
+
+        node.vm.provision "install-docker", type: "shell", :path => "ubuntu/vagrant/install-docker.sh"
+        node.vm.provision "install-kubernetes", type: "shell", :path => "ubuntu/vagrant/install-kubernetes.sh"
+        # If next line fails, its because kubeadm failed in control master provision.
+        node.vm.provision "join-cluster", type: "shell", :path => "ubuntu/vagrant/node_join_cluster.sh"
+
     end
-    config.vm.hostname = "worker01"
-    config.vm.box = "centos/7"
-    config.vm.box_version = "2004.01"
-    config.vm.box_check_update = false
-    config.vm.network :private_network, ip: "10.1.1.11"
-
-    #config.vm.network "public_network", bridge: 'wlp112s0', ip: "192.168.1.222"
-    config.vm.provision "shell", inline: $script  
-    config.vm.provision "shell", inline: $cka_docker
-    config.vm.provision "shell", inline: $cka_kubetools
-    config.vm.provision "shell", inline: "sudo shutdown -r +1"
-
-    
-  end
-
-##### DEFINE worker02 #####
-  config.vm.define "worker02" do |config|
-    config.vm.provider "virtualbox" do |v|
-        v.memory = 2048
-        v.cpus = 1
-    end
-    config.vm.hostname = "worker02"
-    config.vm.box = "centos/7"
-    config.vm.box_version = "2004.01"
-    config.vm.box_check_update = false
-    config.vm.network :private_network, ip: "10.1.1.12"
-    #config.vm.network "public_network", bridge: 'wlp112s0',ip: "192.168.1.223"
-    config.vm.provision "shell", inline: $script  
-    config.vm.provision "shell", inline: $cka_docker
-    config.vm.provision "shell", inline: $cka_kubetools
-    config.vm.provision "shell", inline: "sudo shutdown -r +1"
-
-  end
-
-##### DEFINE worker02 #####
-  config.vm.define "worker03" do |config|
-    config.vm.provider "virtualbox" do |v|
-        v.memory = 2048
-        v.cpus = 1
-    end
-    config.vm.hostname = "worker03"
-    config.vm.box = "centos/7"
-    config.vm.box_version = "2004.01"
-    config.vm.box_check_update = false
-    #config.vm.network "public_network", bridge: 'wlp112s0',ip: "192.168.1.224"
-    config.vm.network :private_network, ip: "10.1.1.13"
-
-    config.vm.provision "shell", inline: $script  
-    config.vm.provision "shell", inline: $cka_docker
-    config.vm.provision "shell", inline: $cka_kubetools
-    config.vm.provision "shell", inline: "sudo shutdown -r +1"
-
   end
 end
-
-
-
