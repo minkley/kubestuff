@@ -187,8 +187,21 @@ pod "nginx" deleted
 pod "nginx1" deleted
 
 ```
+
+## Useful links
+Kelsey Hightowers kubernetes the hard way is an excellent link for getting started and is recommended by the Linux Foundation CKA training.
+[Kubernetes the hard way](URL 'https://github.com/kelseyhightower/kubernetes-the-hard-way')
+
+To get started on installing Kubernetes, take a look [here](URL 'https://kubernetes.io/docs/setup/')
+
+Kubernetes API Server validates and configures data for pods, services, replication etc.  
+The API server is accessed by REST.   [more info here](URL 'https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/')
+
 ## Tips
 
 - Run the following command on your master create command completion for kubectl
   - `kubectl completion bash >/etc/bash_completeion.d/kubectl`
 
+## Troubleshooting VirtualBox
+- I have found during developing with VM's, creating and deleting VM's can sometimes cause strange behaviour with Virtualbox or your vms.  When this happens before you rebuild or delete anythin, try rebooting your host.  This usually worked for me.
+- 

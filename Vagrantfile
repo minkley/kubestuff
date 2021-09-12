@@ -77,7 +77,8 @@ Vagrant.configure("2") do |config|
 
         node.vm.provision "kubeadm-init",type: "shell", :path => "ubuntu/vagrant/kubeadm-init.sh"
 
-        node.vm.provision "pod-network-init",type: "shell", :path => "ubuntu/vagrant/install-CNI-Weave.sh"
+        #node.vm.provision "pod-network-init",type: "shell", :path => "ubuntu/vagrant/install-CNI-Weave.sh"
+        node.vm.provision "pod-network-init",type: "shell", :path => "ubuntu/vagrant/install-CNI-Calico.sh"
 
 
 
