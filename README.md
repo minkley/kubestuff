@@ -109,7 +109,15 @@ Build the nodes after you have successfully built kmaster
 
    You can also run `ssh vagrant@kmasterIP `
 
-## Install Weave CNI
+## Install CNI
+Choose which CNI you want to install.  The default is Calico
+
+### Calico
+The script - install-CNI-Calico.sh is sourced from Vagrantfile
+```
+export KUBECONFIG=/etc/kubernetes/admin.conf
+kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+```
 
 The script, install-CNI-Weave.sh is run during the build on kmaster.
 ```angular2html
